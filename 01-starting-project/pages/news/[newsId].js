@@ -1,3 +1,9 @@
+import { useRouter } from 'next/router';
+
 export default function NewDetail(params) {
-    return <h1>News Detail</h1>
-};
+  const router = useRouter();
+
+  const newsId = router.query.newsId;
+//   console.log('router: ', router);
+  return <h1>News Detail id: {newsId}</h1>;
+}
