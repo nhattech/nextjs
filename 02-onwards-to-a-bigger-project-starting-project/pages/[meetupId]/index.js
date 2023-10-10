@@ -1,48 +1,62 @@
+import { MongoClient, ObjectId } from 'mongodb';
+
 import MeetupDetail from '../../components/meetups/MeetupDetail';
 
 function MeetupDetails(props) {
+  const { title, image, address, description } = props.meetup;
   return (
     <MeetupDetail
-      title="first meetup"
-      image="https://cdn.tgdd.vn/Products/Images/44/301634/hp-15s-fq2716tu-i3-7c0x3pa-thumb-600x600.jpg"
-      address="some address 5, 12345, city"
-      description="Some descriptions"
+      title={title}
+      image={image}
+      address={address}
+      description={description}
     />
   );
 }
 
 export async function getStaticPaths() {
+  const connect = await MongoClient.connect(
+    'mongodb+srv://root:root@cluster0.mvfd5ef.mongodb.net/meetups?retryWrites=true&w=majority'
+  );
+  const db = connect.db();
+  const meetupCollection = db.collection('meetups');
+  const meetups = await meetupCollection.find({}, { _id: 1 }).toArray();
+
+  connect.close();
+
   return {
     fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: 'm1',
-        },
+    paths: meetups.map((meetup) => ({
+      params: {
+        meetupId: meetup._id.toString(),
       },
-      {
-        params: {
-          meetupId: 'm2',
-        },
-      },
-    ],
+    })),
   };
 }
 
 export async function getStaticProps(context) {
-  const params = context.params;
-  console.log(params.meetupId);
+  const meetupId = context.params.meetupId;
+
+  const connect = await MongoClient.connect(
+    'mongodb+srv://root:root@cluster0.mvfd5ef.mongodb.net/meetups?retryWrites=true&w=majority'
+  );
+  const db = connect.db();
+  const meetupCollection = db.collection('meetups');
+  const meetup = await meetupCollection.findOne({ _id: new ObjectId(meetupId) });
+
+  connect.close();
 
   return {
     props: {
       meetup: {
-        title: 'first meetup',
-        image:
-          'https://cdn.tgdd.vn/Products/Images/44/301634/hp-15s-fq2716tu-i3-7c0x3pa-thumb-600x600.jpg',
-        address: 'some address 5, 12345, city',
-        description: 'Some descriptions',
+        id: meetup._id.toString(),
+        title: meetup.title,
+        image: meetup.image,
+        address: meetup.address,
+        description: meetup.description,
       },
     },
   };
 }
+
 export default MeetupDetails;
